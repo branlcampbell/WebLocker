@@ -10,6 +10,7 @@ import socket
 import atexit
 import os
 
+# This is currently a working build with features yet to be implemented
 
 # Check to see if an email address, email password, and WebLocker password have already been entered
 try:
