@@ -1,15 +1,4 @@
-__author__ = 'Brandon'
-
-'''
-WebLocker is a program made to prevent unwanted users from accessing cached information on web browsers.
-This program will prompt the user for a password each time their web browser is opened.
-If the password is incorrectly entered, WebLocker will retrieve the IP address of the current network and
-send it to the email address that the user entered when first setting up the program.
-The user can also type in the word "Settings" to access options for changing their email and password with an
-authentication code required for each of them.
-It is important to note that the user should have their administrator settings activated to prevent this program
-from being removed without the user's permission.
-'''
+__author__ = 'Brandon Campbell'
 
 import tkinter as tk
 from tkinter import *
