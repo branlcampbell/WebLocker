@@ -1,15 +1,4 @@
-__author__ = 'Brandon'
-
-'''
-WebLocker is a program made to prevent unwanted users from accessing cached information on web browsers.
-This program will prompt the user for a password each time their web browser is opened.
-If the password is incorrectly entered, WebLocker will retrieve the IP address of the current network and
-send it to the email address that the user entered when first setting up the program.
-The user can also type in the word "Settings" to access options for changing their email and password with an
-authentication code required for each of them.
-It is important to note that the user should have their administrator settings activated to prevent this program
-from being removed without the user's permission.
-'''
+__author__ = 'Brandon Campbell'
 
 import tkinter as tk
 from tkinter import *
@@ -22,12 +11,19 @@ import atexit
 import os
 
 
+def createJSON(email, emailPass, app):
+    # Creates a list to be referenced for writing into a JSON file
+    userList = [email, emailPass, app]
+    # Imports list into a JSON file for reading
+    with open('webLocker.json', 'w') as outfile:
+        json.dump(userList, outfile)
+    webLocker = open('webLocker.json')
+    webLocker.close()
+
 # Check to see if an email address, email password, and WebLocker password have already been entered
 try:
-
     webLocker = open('webLocker.json')
     userData = json.load(webLocker)
-
     emailName = userData[0]
     emailPass = userData[1]
     appPassword = userData[2]
@@ -36,12 +32,10 @@ try:
 
 except IOError:
 
-    # Set up application by having the user enter their information
+    # Set up application by having the user enter their information into the console
     while True:
-
         emailName = ""
         while emailName.find("@") == -1:
-
             emailName = input("Please enter a valid email address: ")
         # Email address and password must be entered for application to send notification email to user
         emailPass = input("Please enter the password for your email account.\nThis will not "
@@ -56,7 +50,6 @@ except IOError:
     while True:
         # Checks the string to make sure it is at least 6 characters long and includes at least one number and letter
         appPassword = ""
-
         def hasNumbers(inputString):
             return any(char.isdigit() for char in inputString)
 
@@ -72,26 +65,10 @@ except IOError:
         verifyApp = input("Please confirm your WebLocker password: ")
 
         if appPassword == verifyApp:
-            break
-
-    # Creates a list to be referenced for writing into a JSON file
-    userList = [emailName, emailPass, appPassword]
-
-    # Imports list into a JSON file for reading
-    with open('webLocker.json', 'w') as outfile:
-        json.dump(userList, outfile)
-
-    webLocker = open('webLocker.json')
-    userData = json.load(webLocker)
-
-    emailName = userData[0]
-    emailPass = userData[1]
-    appPassword = userData[2]
-
-    webLocker.close()
+            createJSON(emailName, emailPass, appPassword)
+            sys.exit()  # The rest of the program will run the next time it is opened
 
 class entryField:
-
     # Construction of the GUI
     def __init__(self, master):
         frame = Frame(master)
@@ -109,17 +86,16 @@ class entryField:
         self.logoLabel.pack()
         self.passwordLabel = Label(text="Password:", font=("Cambria", 30), bg="#404040")
         self.passwordLabel.pack()
-        self.myEntryBox = tk.Entry(show="*", justify="center", width=30) #Password entry field
-        self.myEntryBox.pack()
-        self.myEntryBox.bind("<Return>", self.Enter)
+        self.passEntryBox = tk.Entry(show="*", justify="center", width=30)  # Password entry field
+        self.passEntryBox.pack()
+        self.passEntryBox.bind("<Return>", self.pressEnter)
 
     # Sends email to user with network's IP Address if incorrect password is entered.
     def sendMail(self):
-
         ipAddress = socket.gethostbyname(socket.gethostname())
 
         FROM = emailName
-        TO = [emailName] # Must be a list
+        TO = [emailName]  # Must be a list
         SUBJECT = "Unauthorized User Detected"
         TEXT = "Hello,\n\nWebLocker has detected an unauthorized user.\n\nTheir IP Address is " + ipAddress
 
@@ -130,42 +106,141 @@ class entryField:
         username = emailName
         password = emailPass
         # Username and password are called from the beginning JSON statement
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        # Currently only supported under Gmail accounts
+        server = smtplib.SMTP('smtp.gmail.com', 587)  # 587 is port for GMail activity
+        # Currently only supported under GMail accounts
         server.ehlo()
         server.starttls()
         server.login(username, password)
         server.sendmail(FROM, TO, message)
         server.quit()
 
-    # Function to check for correct password
-    def Enter(self, event):
+    # The next three functions are for changing account information via the settings menu
+    # Changes the user's email address
+    def changeEmail(self):
+        newEmailName = self.newEmailEntry.get()
+        createJSON(newEmailName, emailPass, appPassword)
+        tkinter.messagebox.showinfo("Change Successful", "Your email address has successfully been changed.")
 
+    # Changes the password of the email address associated with the program
+    def changeEmailPass(self):
+        newEmailPass = self.newEmailPassEntry.get()
+        createJSON(emailName, newEmailPass, appPassword)
+        tkinter.messagebox.showinfo("Change Successful", "Your email address password has successfully been changed."
+                                    )
+    # Changes the WebLocker password
+    def changeAppPass(self):
+        newAppPass = self.newAppPassEntry.get()
+        createJSON(emailName, emailPass, newAppPass)
+        tkinter.messagebox.showinfo("Change Successful", "Your WebLocker password has successfully been changed.")
+
+    # Verifies user entered all of the correct information currently entered in the program
+    def checkInfo(self, event, num):
+        if (self.emailEntry.get() == emailName and self.emailPassEntry.get() == emailPass and
+                    self.appPassEntry.get() == appPassword):
+
+            # The num parameter indicates what information the user wanted to edit
+            if num == 1:
+                newEmailName = self.newEmailEntry.get()
+
+                if newEmailName.find("@") == -1:
+                    tkinter.messagebox.showerror("Inavlid Email Address", "Please enter a valid email address")
+
+                else:
+                    self.changeEmail()
+
+            elif num == 2:
+                self.changeEmailPass()
+
+            elif num == 3:
+                newAppPass = self.newAppPassEntry.get()
+                if len(newAppPass) < 6 or hasNumbers(newAppPass) is False or hasAplha(newAppPass) is False:
+                    tkinter.messagebox.showerror("Invalid Password", "Your new password must contain at least six"
+                                                                     "characters, including at least one letter and"
+                                                                     "number. Please try again.")
+                else:
+                    self.changeAppPass()
+
+        else:
+            tkinter.messagebox.showerror("Error", "One or more entry fields are incorrect. Please try again.")
+
+            ''' The first two error messages ensure the user's input is valid and meet the requirements for an email
+            and password. Changing the email password cannot be checked since there is no actual way to ensure the user
+            is inputting the correct password associated with their email address. The final error message is to notify
+            that one of the text fields containing the original information is incorrect.
+            '''
+
+# Text entry fields for the user to verify the proper credentials before changing any information
+    def getInfo(self, event, num):
+        self.emailLabel = Label(root, text="Email Address:", width=25)
+        self.emailLabel.pack()
+        self.emailEntry = tk.Entry(justify="center", width=30)
+        self.emailEntry.pack()
+        self.emailPassLabel = Label(root, text="Email Address Password:", width=25)
+        self.emailPassLabel.pack()
+        self.emailPassEntry = tk.Entry(show="*", justify="center", width=30)
+        self.emailPassEntry.pack()
+        self.appPassLabel = Label(root, text="WebLocker Password:", width=25)
+        self.appPassLabel.pack()
+        self.appPassEntry = tk.Entry(show="*", justify="center", width=30)
+        self.appPassEntry.pack()
+
+        ''' Another check for what the user wishes to edit. Made this way to prevent the above code
+         from having to be pasted into two more functions and taking up space '''
+        if num == 1:
+            self.newEmailLabel = Label(root, text="New Email Address:", width=25)
+            self.newEmailLabel.pack()
+            self.newEmailEntry = tk.Entry(justify="center", width=30)
+            self.newEmailEntry.pack()
+            self.submitButton = Button(root, text="Submit", width=25, command=lambda: self.checkInfo(self, 1))
+            self.submitButton.pack()
+
+        elif num == 2:
+            self.newEmailPassLabel = Label(root, text="New Email Address Password:", width=25)
+            self.newEmailPassLabel.pack()
+            self.newEmailPassEntry = tk.Entry(show="*", justify="center", width=30)
+            self.newEmailPassEntry.pack()
+            self.submitButton = Button(root, text="Submit", width=25, command=lambda: self.checkInfo(self, 2))
+            self.submitButton.pack()
+
+        elif num == 3:
+            self.newAppPassLabel = Label(root, text="New WebLocker Password:", width=25)
+            self.newAppPassLabel.pack()
+            self.newAppPassEntry = tk.Entry(show="*", justify="center", width=30)
+            self.newAppPassEntry.pack()
+            self.submitButton = Button(root, text="Submit", width=25, command=lambda: self.checkInfo(self, 3))
+            self.submitButton.pack()
+
+    # Function to check for correct password
+    def pressEnter(self, event):
         correctPass = appPassword
 
-        if self.myEntryBox.get() == "Settings":
+        if self.passEntryBox.get() == "Settings":
             settingsFrame = Frame(root)
             settingsFrame.pack()
-            self.passwordLabel = Label(root, text="Settings", font=("Cambria", 30))
+            self.passwordLabel = Label(root, text="Settings", font=("Cambria", 30), width=10)
             self.passwordLabel.pack()
-            self.emailButton = Button(root, text="Change Email Address")
+            self.emailButton = Button(root, text="Change Email Address", width=30,
+                                      command=lambda: self.getInfo(self, 1))
             self.emailButton.pack()
-            self.passButton = Button(root, text="Change Password")
+            self.mailPassButton = Button(root, text="Change Email Address Password", width=30,
+                                         command=lambda: self.getInfo(self, 2))
+            self.mailPassButton.pack()
+            self.passButton = Button(root, text="Change WebLocker Password", width=30,
+                                     command=lambda: self.getInfo(self, 3))
             self.passButton.pack()
-            # TODO allow for user to change email address and password
 
-        elif self.myEntryBox.get() == correctPass:
+        elif self.passEntryBox.get() == correctPass:
             sys.exit()
+
         else:
             tkinter.messagebox.showerror("Invalid Password", "The password you entered is incorrect.")
             self.sendMail()
-
 
 root = tk.Tk()
 currentWindow = entryField(root)
 root.mainloop()
 
-# The program will close the opened web browser. Currently only Google Chrome is supported
+# The program will close the opened web browser if forcefully closed. Currently only Google Chrome is supported
 def closeBrowser():
     os.system("taskkill /F /IM chrome.exe")
 
