@@ -10,6 +10,7 @@ import socket
 import atexit
 import os
 
+# This is currently a working build with features yet to be implemented
 
 def createJSON(email, emailPass, app):
     # Creates a list to be referenced for writing into a JSON file
