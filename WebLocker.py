@@ -249,5 +249,9 @@ root.mainloop()
 def closeBrowser():
     os.system("taskkill /F /IM chrome.exe")
 
+<<<<<<< HEAD
 atexit.register(closeBrowser())
 # TODO find a workaround in the case that the user presses ALT + TAB
+=======
+atexit.register(closeBrowser())
+>>>>>>> 620893cb5cddd38c86b57ae620c446e137e81935
