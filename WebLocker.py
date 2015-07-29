@@ -144,7 +144,7 @@ class entryField:
                 newEmailName = self.newEmailEntry.get()
 
                 if newEmailName.find("@") == -1:
-                    tkinter.messagebox.showerror("Inavlid Email Address", "Please enter a valid email address")
+                    tkinter.messagebox.showerror("Invalid Email Address", "Please enter a valid email address")
 
                 else:
                     self.changeEmail()
@@ -215,19 +215,23 @@ class entryField:
     def pressEnter(self, event):
         correctPass = appPassword
 
+        def closeFrame():
+            settingsFrame.destroy()
+            return NONE
+
         if self.passEntryBox.get() == "Settings":
             settingsFrame = Frame(root)
             settingsFrame.pack()
-            self.passwordLabel = Label(root, text="Settings", font=("Cambria", 30), width=10)
+            self.passwordLabel = Label(settingsFrame, text="Settings", font=("Cambria", 30), width=10)
             self.passwordLabel.pack()
-            self.emailButton = Button(root, text="Change Email Address", width=30,
-                                      command=lambda: self.getInfo(self, 1))
+            self.emailButton = Button(settingsFrame, text="Change Email Address", width=30,
+                                      command=lambda: self.getInfo(self, 1) & closeFrame())
             self.emailButton.pack()
-            self.mailPassButton = Button(root, text="Change Email Address Password", width=30,
-                                         command=lambda: self.getInfo(self, 2))
+            self.mailPassButton = Button(settingsFrame, text="Change Email Address Password", width=30,
+                                         command=lambda: self.getInfo(self, 2) & closeFrame())
             self.mailPassButton.pack()
-            self.passButton = Button(root, text="Change WebLocker Password", width=30,
-                                     command=lambda: self.getInfo(self, 3))
+            self.passButton = Button(settingsFrame, text="Change WebLocker Password", width=30,
+                                     command=lambda: self.getInfo(self, 3) & closeFrame())
             self.passButton.pack()
 
         elif self.passEntryBox.get() == correctPass:
