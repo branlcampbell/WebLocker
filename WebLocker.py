@@ -251,5 +251,3 @@ def closeBrowser():
 
 atexit.register(closeBrowser())
 # TODO find a workaround in the case that the user presses ALT + TAB
-=======
-atexit.register(closeBrowser())
